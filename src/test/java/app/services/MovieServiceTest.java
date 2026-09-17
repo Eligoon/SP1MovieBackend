@@ -9,6 +9,7 @@ import app.daos.MovieDAO;
 import app.dtos.CreditsDTO;
 import app.dtos.GenreDTO;
 import app.dtos.MovieDTO;
+import app.entities.Genre;
 import app.entities.Movie;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -361,6 +362,43 @@ class MovieServiceTest extends DAOTestBase {
         assertFalse(results.stream()
                 .anyMatch(movie ->
                         movie.getTitle().equals("Comedy Movie")));
+    }
+
+    @Test
+    void getAllGenresShouldReturnAllGenres() {
+
+        GenreDTO drama = GenreDTO.builder()
+                .id(18L)
+                .name("Drama")
+                .build();
+
+        GenreDTO comedy = GenreDTO.builder()
+                .id(35L)
+                .name("Comedy")
+                .build();
+
+        MovieDTO movie = MovieDTO.builder()
+                .id(562L)
+                .title("Test Movie")
+                .overview("Test overview")
+                .releaseDate("2020-01-01")
+                .rating(8.0)
+                .genres(List.of(drama, comedy))
+                .build();
+
+        movieService.saveMovie(movie, emptyCredits());
+
+        List<Genre> genres = movieService.getAllGenres();
+
+        assertEquals(2, genres.size());
+
+        assertTrue(genres.stream()
+                .anyMatch(genre ->
+                        genre.getName().equals("Drama")));
+
+        assertTrue(genres.stream()
+                .anyMatch(genre ->
+                        genre.getName().equals("Comedy")));
     }
 
     private CreditsDTO emptyCredits() {

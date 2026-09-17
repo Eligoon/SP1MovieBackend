@@ -180,4 +180,8 @@ public class MovieService {
     public List<Movie> getMoviesByGenre(Long genreId) {
         return movieDAO.getMoviesByGenre(genreId);
     }
+
+    public List<Genre> getAllGenres() {
+        return genreDAO.getAll();
+    }
 }

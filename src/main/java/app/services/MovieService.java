@@ -107,13 +107,18 @@ public class MovieService {
     }
 
     private Set<Actor> convertActors(CreditsDTO creditsDTO) {
-
         if (creditsDTO == null || creditsDTO.getCast() == null) {
             return Collections.emptySet();
         }
 
         return creditsDTO.getCast().stream()
-                .map(this::findOrCreateActor)
+                .collect(Collectors.toMap(
+                        ActorDTO::getId,
+                        this::findOrCreateActor,
+                        (first, second) -> first
+                ))
+                .values()
+                .stream()
                 .collect(Collectors.toSet());
     }
 

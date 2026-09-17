@@ -15,6 +15,10 @@ public class MovieDAO implements IDAO<Movie, Long> {
         this.emf = HibernateConfig.getEntityManagerFactory();
     }
 
+    public MovieDAO(EntityManagerFactory emf) {
+        this.emf = emf;
+    }
+
     @Override
     public Movie create(Movie movie) {
 

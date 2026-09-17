@@ -589,6 +589,38 @@ class MovieServiceTest extends DAOTestBase {
                         movie.getRating() < 3.0));
     }
 
+    @Test
+    void getTop10LowestRatedShouldReturnLowestRatedMovies() {
+
+        for (int i = 1; i <= 12; i++) {
+
+            MovieDTO movie = MovieDTO.builder()
+                    .id(590L + i)
+                    .title("Movie " + i)
+                    .overview("Test movie")
+                    .releaseDate("2020-01-01")
+                    .rating((double) i)
+                    .genres(List.of())
+                    .build();
+
+            movieService.saveMovie(movie, emptyCredits());
+        }
+
+        List<Movie> lowestMovies =
+                movieService.getTop10LowestRated();
+
+        assertEquals(10, lowestMovies.size());
+
+        assertEquals(1.0, lowestMovies.get(0).getRating());
+        assertEquals(2.0, lowestMovies.get(1).getRating());
+        assertEquals(3.0, lowestMovies.get(2).getRating());
+        assertEquals(10.0, lowestMovies.get(9).getRating());
+
+        assertTrue(lowestMovies.stream()
+                .noneMatch(movie ->
+                        movie.getRating() > 10.0));
+    }
+
     private CreditsDTO emptyCredits() {
         return CreditsDTO.builder()
                 .cast(List.of())

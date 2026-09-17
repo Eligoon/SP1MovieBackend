@@ -25,6 +25,12 @@ public class MovieService {
 
     public Movie saveMovie(MovieDTO dto) {
 
+        Movie existingMovie = movieDAO.getByTmdbId(dto.getId());
+
+        if (existingMovie != null) {
+            return existingMovie;
+        }
+
         Movie movie = Movie.builder()
                 .tmdbId(dto.getId())
                 .title(dto.getTitle())

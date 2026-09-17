@@ -1,5 +1,7 @@
 package app.tmdb;
 
+
+import app.dtos.CreditsDTO;
 import app.dtos.MovieDTO;
 import app.exceptions.ApiException;
 import app.utils.Utils;
@@ -73,6 +75,51 @@ public class TMDbClient {
             throw new ApiException(
                     500,
                     "Could not fetch movie from TMDb: "
+                            + e.getMessage()
+            );
+        }
+    }
+
+    public CreditsDTO getCredits(long movieId) {
+
+        String url = baseUrl + "/movie/" + movieId
+                + "/credits?api_key=" + apiKey;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (response.statusCode() != 200) {
+                throw new ApiException(
+                        response.statusCode(),
+                        "TMDb credits request failed: " + response.body()
+                );
+            }
+
+            return objectMapper.readValue(
+                    response.body(),
+                    CreditsDTO.class
+            );
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+
+            throw new ApiException(
+                    500,
+                    "TMDb credits request was interrupted."
+            );
+
+        } catch (IOException e) {
+            throw new ApiException(
+                    500,
+                    "Could not fetch credits from TMDb: "
                             + e.getMessage()
             );
         }

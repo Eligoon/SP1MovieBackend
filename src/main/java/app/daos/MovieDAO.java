@@ -135,4 +135,23 @@ public class MovieDAO implements IDAO<Movie, Long> {
             em.close();
         }
     }
+
+    public Movie getByTmdbId(Long tmdbId) {
+
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT m FROM Movie m WHERE m.tmdbId = :tmdbId",
+                            Movie.class
+                    )
+                    .setParameter("tmdbId", tmdbId)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+        } finally {
+            em.close();
+        }
+    }
 }

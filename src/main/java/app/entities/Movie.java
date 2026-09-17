@@ -42,7 +42,7 @@ public class Movie {
     @Builder.Default
     private Set<Actor> actors = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "movie_genre",
             joinColumns = @JoinColumn(name = "movie_id"),

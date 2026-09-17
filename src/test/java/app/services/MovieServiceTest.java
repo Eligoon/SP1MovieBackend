@@ -518,6 +518,45 @@ class MovieServiceTest extends DAOTestBase {
         );
     }
 
+    @Test
+    void getAverageRatingShouldReturnAverageOfAllMovieRatings() {
+
+        MovieDTO movie1 = MovieDTO.builder()
+                .id(565L)
+                .title("Movie One")
+                .overview("Test movie")
+                .releaseDate("2020-01-01")
+                .rating(6.0)
+                .genres(List.of())
+                .build();
+
+        MovieDTO movie2 = MovieDTO.builder()
+                .id(566L)
+                .title("Movie Two")
+                .overview("Test movie")
+                .releaseDate("2021-01-01")
+                .rating(8.0)
+                .genres(List.of())
+                .build();
+
+        MovieDTO movie3 = MovieDTO.builder()
+                .id(567L)
+                .title("Movie Three")
+                .overview("Test movie")
+                .releaseDate("2022-01-01")
+                .rating(10.0)
+                .genres(List.of())
+                .build();
+
+        movieService.saveMovie(movie1, emptyCredits());
+        movieService.saveMovie(movie2, emptyCredits());
+        movieService.saveMovie(movie3, emptyCredits());
+
+        Double averageRating = movieService.getAverageRating();
+
+        assertEquals(8.0, averageRating);
+    }
+
     private CreditsDTO emptyCredits() {
         return CreditsDTO.builder()
                 .cast(List.of())

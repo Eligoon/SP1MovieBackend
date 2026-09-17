@@ -192,4 +192,8 @@ public class MovieService {
     public List<Director> getAllDirectors() {
         return directorDAO.getAll();
     }
+
+    public Double getAverageRating() {
+        return movieDAO.getAverageRating();
+    }
 }

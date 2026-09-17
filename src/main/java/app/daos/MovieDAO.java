@@ -244,4 +244,21 @@ public class MovieDAO implements IDAO<Movie, Long> {
             em.close();
         }
     }
+
+    public List<Movie> getTop10MostPopular() {
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT m FROM Movie m " +
+                                    "WHERE m.popularity IS NOT NULL " +
+                                    "ORDER BY m.popularity DESC",
+                            Movie.class)
+                    .setMaxResults(10)
+                    .getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
 }

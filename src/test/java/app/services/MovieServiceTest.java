@@ -9,6 +9,8 @@ import app.daos.MovieDAO;
 import app.dtos.CreditsDTO;
 import app.dtos.GenreDTO;
 import app.dtos.MovieDTO;
+import app.entities.Actor;
+import app.entities.Director;
 import app.entities.Genre;
 import app.entities.Movie;
 import jakarta.persistence.EntityManager;
@@ -399,6 +401,61 @@ class MovieServiceTest extends DAOTestBase {
         assertTrue(genres.stream()
                 .anyMatch(genre ->
                         genre.getName().equals("Comedy")));
+    }
+
+    @Test
+    void getAllActorsAndDirectorsShouldReturnStoredActorsAndDirectors() {
+
+        CreditsDTO credits = CreditsDTO.builder()
+                .cast(List.of(
+                        app.dtos.ActorDTO.builder()
+                                .id(1001L)
+                                .name("Test Actor 1")
+                                .character("Character 1")
+                                .build(),
+                        app.dtos.ActorDTO.builder()
+                                .id(1002L)
+                                .name("Test Actor 2")
+                                .character("Character 2")
+                                .build()
+                ))
+                .crew(List.of(
+                        app.dtos.CrewMemberDTO.builder()
+                                .id(2001L)
+                                .name("Test Director")
+                                .job("Director")
+                                .build()
+                ))
+                .build();
+
+        MovieDTO movieDTO = MovieDTO.builder()
+                .id(563L)
+                .title("Test Movie")
+                .overview("Test overview")
+                .releaseDate("2020-01-01")
+                .rating(8.0)
+                .genres(List.of())
+                .build();
+
+        movieService.saveMovie(movieDTO, credits);
+
+        List<Actor> actors = movieService.getAllActors();
+        List<Director> directors = movieService.getAllDirectors();
+
+        assertEquals(2, actors.size());
+        assertEquals(1, directors.size());
+
+        assertTrue(actors.stream()
+                .anyMatch(actor ->
+                        actor.getName().equals("Test Actor 1")));
+
+        assertTrue(actors.stream()
+                .anyMatch(actor ->
+                        actor.getName().equals("Test Actor 2")));
+
+        assertTrue(directors.stream()
+                .anyMatch(director ->
+                        director.getName().equals("Test Director")));
     }
 
     private CreditsDTO emptyCredits() {

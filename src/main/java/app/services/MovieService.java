@@ -184,4 +184,12 @@ public class MovieService {
     public List<Genre> getAllGenres() {
         return genreDAO.getAll();
     }
+
+    public List<Actor> getAllActors() {
+        return actorDAO.getAll();
+    }
+
+    public List<Director> getAllDirectors() {
+        return directorDAO.getAll();
+    }
 }

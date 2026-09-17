@@ -143,4 +143,8 @@ public class ActorDAO implements IDAO<Actor, Long> {
             em.close();
         }
     }
+
+    public List<Actor> getAllActors() {
+        return getAll();
+    }
 }

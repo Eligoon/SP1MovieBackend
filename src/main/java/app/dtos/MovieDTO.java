@@ -1,16 +1,16 @@
 package app.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
-
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MovieDTO {
 
     private Long id;
@@ -20,7 +20,7 @@ public class MovieDTO {
     private String overview;
 
     @JsonProperty("release_date")
-    private LocalDate releaseDate;
+    private String releaseDate;
 
     @JsonProperty("vote_average")
     private Double rating;

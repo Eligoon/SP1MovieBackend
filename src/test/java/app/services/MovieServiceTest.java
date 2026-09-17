@@ -250,6 +250,54 @@ class MovieServiceTest extends DAOTestBase {
         assertNull(deletedMovie);
     }
 
+    @Test
+    void searchMoviesByTitleShouldBeCaseInsensitiveAndContainSearchString() {
+
+        MovieDTO movie1 = MovieDTO.builder()
+                .id(556L)
+                .title("Fight Club")
+                .overview("Test movie")
+                .releaseDate("1999-10-15")
+                .rating(8.4)
+                .genres(List.of())
+                .build();
+
+        MovieDTO movie2 = MovieDTO.builder()
+                .id(557L)
+                .title("The Fight")
+                .overview("Another test movie")
+                .releaseDate("2020-01-01")
+                .rating(7.5)
+                .genres(List.of())
+                .build();
+
+        MovieDTO movie3 = MovieDTO.builder()
+                .id(558L)
+                .title("The Matrix")
+                .overview("Different movie")
+                .releaseDate("1999-03-31")
+                .rating(8.7)
+                .genres(List.of())
+                .build();
+
+        movieService.saveMovie(movie1, emptyCredits());
+        movieService.saveMovie(movie2, emptyCredits());
+        movieService.saveMovie(movie3, emptyCredits());
+
+        List<Movie> results =
+                movieService.searchMoviesByTitle("FIGHT");
+
+        assertEquals(2, results.size());
+
+        assertTrue(results.stream()
+                .anyMatch(movie ->
+                        movie.getTitle().equals("Fight Club")));
+
+        assertTrue(results.stream()
+                .anyMatch(movie ->
+                        movie.getTitle().equals("The Fight")));
+    }
+
     private CreditsDTO emptyCredits() {
         return CreditsDTO.builder()
                 .cast(List.of())

@@ -154,4 +154,20 @@ public class MovieDAO implements IDAO<Movie, Long> {
             em.close();
         }
     }
+
+    public List<Movie> searchByTitle(String searchString) {
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT m FROM Movie m " +
+                                    "WHERE LOWER(m.title) LIKE LOWER(:searchString)",
+                            Movie.class)
+                    .setParameter("searchString", "%" + searchString + "%")
+                    .getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
 }

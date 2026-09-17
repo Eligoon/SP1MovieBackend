@@ -172,4 +172,8 @@ public class MovieService {
 
         return LocalDate.parse(releaseDate);
     }
+
+    public List<Movie> searchMoviesByTitle(String searchString) {
+        return movieDAO.searchByTitle(searchString);
+    }
 }

@@ -124,4 +124,23 @@ public class DirectorDAO implements IDAO<Director, Long> {
             em.close();
         }
     }
+
+    public Director getByTmdbId(Long tmdbId) {
+
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT d FROM Director d WHERE d.tmdbId = :tmdbId",
+                            Director.class
+                    )
+                    .setParameter("tmdbId", tmdbId)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+        } finally {
+            em.close();
+        }
+    }
 }

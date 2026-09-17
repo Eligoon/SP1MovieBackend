@@ -124,4 +124,23 @@ public class ActorDAO implements IDAO<Actor, Long> {
             em.close();
         }
     }
+
+    public Actor getByTmdbId(Long tmdbId) {
+
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT a FROM Actor a WHERE a.tmdbId = :tmdbId",
+                            Actor.class
+                    )
+                    .setParameter("tmdbId", tmdbId)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+        } finally {
+            em.close();
+        }
+    }
 }

@@ -1,9 +1,12 @@
 package app.services;
 
 import app.config.TestHibernateConfig;
+import app.daos.ActorDAO;
+import app.daos.DAOTestBase;
+import app.daos.DirectorDAO;
 import app.daos.GenreDAO;
 import app.daos.MovieDAO;
-import app.daos.DAOTestBase;
+import app.dtos.CreditsDTO;
 import app.dtos.GenreDTO;
 import app.dtos.MovieDTO;
 import app.entities.Movie;
@@ -23,6 +26,8 @@ class MovieServiceTest extends DAOTestBase {
     private static EntityManagerFactory emf;
     private static MovieDAO movieDAO;
     private static GenreDAO genreDAO;
+    private static ActorDAO actorDAO;
+    private static DirectorDAO directorDAO;
     private static MovieService movieService;
 
     @BeforeAll
@@ -36,8 +41,15 @@ class MovieServiceTest extends DAOTestBase {
 
         movieDAO = new MovieDAO(emf);
         genreDAO = new GenreDAO(emf);
+        actorDAO = new ActorDAO(emf);
+        directorDAO = new DirectorDAO(emf);
 
-        movieService = new MovieService(movieDAO, genreDAO);
+        movieService = new MovieService(
+                movieDAO,
+                genreDAO,
+                actorDAO,
+                directorDAO
+        );
     }
 
     @BeforeEach
@@ -55,6 +67,12 @@ class MovieServiceTest extends DAOTestBase {
                     .executeUpdate();
 
             em.createNativeQuery("DELETE FROM movies")
+                    .executeUpdate();
+
+            em.createNativeQuery("DELETE FROM actors")
+                    .executeUpdate();
+
+            em.createNativeQuery("DELETE FROM directors")
                     .executeUpdate();
 
             em.createNativeQuery("DELETE FROM genres")
@@ -97,7 +115,8 @@ class MovieServiceTest extends DAOTestBase {
                 .genres(List.of(genreDTO))
                 .build();
 
-        Movie savedMovie = movieService.saveMovie(movieDTO);
+        Movie savedMovie =
+                movieService.saveMovie(movieDTO, emptyCredits());
 
         assertNotNull(savedMovie.getId());
         assertEquals(550L, savedMovie.getTmdbId());
@@ -130,7 +149,8 @@ class MovieServiceTest extends DAOTestBase {
                 .genres(List.of())
                 .build();
 
-        Movie savedMovie = movieService.saveMovie(movieDTO);
+        Movie savedMovie =
+                movieService.saveMovie(movieDTO, emptyCredits());
 
         Movie foundMovie =
                 movieService.getMovieById(savedMovie.getId());
@@ -162,8 +182,8 @@ class MovieServiceTest extends DAOTestBase {
                 .genres(List.of())
                 .build();
 
-        movieService.saveMovie(movie1);
-        movieService.saveMovie(movie2);
+        movieService.saveMovie(movie1, emptyCredits());
+        movieService.saveMovie(movie2, emptyCredits());
 
         List<Movie> movies = movieService.getAllMovies();
 
@@ -190,7 +210,8 @@ class MovieServiceTest extends DAOTestBase {
                 .genres(List.of())
                 .build();
 
-        Movie movie = movieService.saveMovie(movieDTO);
+        Movie movie =
+                movieService.saveMovie(movieDTO, emptyCredits());
 
         movie.setTitle("Updated Title");
         movie.setRating(9.0);
@@ -215,7 +236,8 @@ class MovieServiceTest extends DAOTestBase {
                 .genres(List.of())
                 .build();
 
-        Movie movie = movieService.saveMovie(movieDTO);
+        Movie movie =
+                movieService.saveMovie(movieDTO, emptyCredits());
 
         boolean deleted =
                 movieService.deleteMovie(movie.getId());
@@ -226,5 +248,12 @@ class MovieServiceTest extends DAOTestBase {
                 movieService.getMovieById(movie.getId());
 
         assertNull(deletedMovie);
+    }
+
+    private CreditsDTO emptyCredits() {
+        return CreditsDTO.builder()
+                .cast(List.of())
+                .crew(List.of())
+                .build();
     }
 }

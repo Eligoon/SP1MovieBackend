@@ -1,9 +1,16 @@
 package app.services;
 
+import app.daos.ActorDAO;
+import app.daos.DirectorDAO;
 import app.daos.GenreDAO;
 import app.daos.MovieDAO;
+import app.dtos.ActorDTO;
+import app.dtos.CreditsDTO;
+import app.dtos.CrewMemberDTO;
 import app.dtos.GenreDTO;
 import app.dtos.MovieDTO;
+import app.entities.Actor;
+import app.entities.Director;
 import app.entities.Genre;
 import app.entities.Movie;
 
@@ -17,27 +24,39 @@ public class MovieService {
 
     private final MovieDAO movieDAO;
     private final GenreDAO genreDAO;
+    private final ActorDAO actorDAO;
+    private final DirectorDAO directorDAO;
 
-    public MovieService(MovieDAO movieDAO, GenreDAO genreDAO) {
+    public MovieService(
+            MovieDAO movieDAO,
+            GenreDAO genreDAO,
+            ActorDAO actorDAO,
+            DirectorDAO directorDAO
+    ) {
         this.movieDAO = movieDAO;
         this.genreDAO = genreDAO;
+        this.actorDAO = actorDAO;
+        this.directorDAO = directorDAO;
     }
 
-    public Movie saveMovie(MovieDTO dto) {
+    public Movie saveMovie(MovieDTO movieDTO, CreditsDTO creditsDTO) {
 
-        Movie existingMovie = movieDAO.getByTmdbId(dto.getId());
+        Movie existingMovie = movieDAO.getByTmdbId(movieDTO.getId());
 
         if (existingMovie != null) {
+            System.out.println("Movie already exists - skipping save");
             return existingMovie;
         }
 
         Movie movie = Movie.builder()
-                .tmdbId(dto.getId())
-                .title(dto.getTitle())
-                .overview(dto.getOverview())
-                .releaseDate(parseReleaseDate(dto.getReleaseDate()))
-                .rating(dto.getRating())
-                .genres(convertGenres(dto.getGenres()))
+                .tmdbId(movieDTO.getId())
+                .title(movieDTO.getTitle())
+                .overview(movieDTO.getOverview())
+                .releaseDate(parseReleaseDate(movieDTO.getReleaseDate()))
+                .rating(movieDTO.getRating())
+                .genres(convertGenres(movieDTO.getGenres()))
+                .actors(convertActors(creditsDTO))
+                .director(convertDirector(creditsDTO))
                 .build();
 
         return movieDAO.create(movie);
@@ -84,6 +103,65 @@ public class MovieService {
                 .build();
 
         return genreDAO.create(newGenre);
+    }
+
+    private Set<Actor> convertActors(CreditsDTO creditsDTO) {
+
+        if (creditsDTO == null || creditsDTO.getCast() == null) {
+            return Collections.emptySet();
+        }
+
+        return creditsDTO.getCast().stream()
+                .map(this::findOrCreateActor)
+                .collect(Collectors.toSet());
+    }
+
+    private Actor findOrCreateActor(ActorDTO dto) {
+
+        Actor existingActor = actorDAO.getByTmdbId(dto.getId());
+
+        if (existingActor != null) {
+            return existingActor;
+        }
+
+        Actor newActor = Actor.builder()
+                .tmdbId(dto.getId())
+                .name(dto.getName())
+                .build();
+
+        return actorDAO.create(newActor);
+    }
+
+    private Director convertDirector(CreditsDTO creditsDTO) {
+
+        if (creditsDTO == null || creditsDTO.getCrew() == null) {
+            return null;
+        }
+
+        return creditsDTO.getCrew().stream()
+                .filter(crewMember ->
+                        "Director".equalsIgnoreCase(crewMember.getJob())
+                )
+                .map(this::findOrCreateDirector)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Director findOrCreateDirector(CrewMemberDTO dto) {
+
+        Director existingDirector =
+                directorDAO.getByTmdbId(dto.getId());
+
+        if (existingDirector != null) {
+            return existingDirector;
+        }
+
+        Director newDirector = Director.builder()
+                .tmdbId(dto.getId())
+                .name(dto.getName())
+                .build();
+
+        return directorDAO.create(newDirector);
     }
 
     private LocalDate parseReleaseDate(String releaseDate) {

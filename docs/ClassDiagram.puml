@@ -1,0 +1,40 @@
+@startuml
+
+title SP-1 Movie Repository - Class Diagram
+
+class Movie {
+    - id : Long
+    - tmdbId : Long
+    - title : String
+    - overview : String
+    - releaseDate : LocalDate
+    - rating : Double
+    - popularity : Double
+    - actors : Set<Actor>
+    - genres : Set<Genre>
+    - director : Director
+}
+
+class Actor {
+    - id : Long
+    - tmdbId : Long
+    - name : String
+}
+
+class Genre {
+    - id : Long
+    - tmdbId : Long
+    - name : String
+}
+
+class Director {
+    - id : Long
+    - tmdbId : Long
+    - name : String
+}
+
+Movie "0..*" -- "0..*" Actor : actors
+Movie "0..*" -- "0..*" Genre : genres
+Movie "0..*" --> "1" Director : director
+
+@enduml

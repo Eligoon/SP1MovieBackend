@@ -15,6 +15,10 @@ public class DirectorDAO implements IDAO<Director, Long> {
         this.emf = HibernateConfig.getEntityManagerFactory();
     }
 
+    public DirectorDAO(EntityManagerFactory emf) {
+        this.emf = emf;
+    }
+
     @Override
     public Director create(Director director) {
         EntityManager em = emf.createEntityManager();

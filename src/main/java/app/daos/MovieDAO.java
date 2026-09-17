@@ -210,4 +210,21 @@ public class MovieDAO implements IDAO<Movie, Long> {
             em.close();
         }
     }
+
+    public List<Movie> getTop10HighestRated() {
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT m FROM Movie m " +
+                                    "WHERE m.rating IS NOT NULL " +
+                                    "ORDER BY m.rating DESC",
+                            Movie.class)
+                    .setMaxResults(10)
+                    .getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
 }

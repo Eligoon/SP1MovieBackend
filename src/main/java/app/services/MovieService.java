@@ -196,4 +196,8 @@ public class MovieService {
     public Double getAverageRating() {
         return movieDAO.getAverageRating();
     }
+
+    public List<Movie> getTop10HighestRated() {
+        return movieDAO.getTop10HighestRated();
+    }
 }

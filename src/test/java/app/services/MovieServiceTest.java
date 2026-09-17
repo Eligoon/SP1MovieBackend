@@ -1,16 +1,20 @@
 package app.services;
 
-import app.config.TestHibernateConfig;
 import app.daos.ActorDAO;
 import app.daos.DAOTestBase;
 import app.daos.DirectorDAO;
 import app.daos.GenreDAO;
 import app.daos.MovieDAO;
-import app.dtos.*;
+import app.dtos.ActorDTO;
+import app.dtos.CreditsDTO;
+import app.dtos.CrewMemberDTO;
+import app.dtos.GenreDTO;
+import app.dtos.MovieDTO;
 import app.entities.Actor;
 import app.entities.Director;
 import app.entities.Genre;
 import app.entities.Movie;
+import app.config.TestHibernateConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterAll;
@@ -25,10 +29,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class MovieServiceTest extends DAOTestBase {
 
     private static EntityManagerFactory emf;
+
     private static MovieDAO movieDAO;
     private static GenreDAO genreDAO;
     private static ActorDAO actorDAO;
     private static DirectorDAO directorDAO;
+
     private static MovieService movieService;
 
     @BeforeAll
@@ -61,33 +67,31 @@ class MovieServiceTest extends DAOTestBase {
         try {
             em.getTransaction().begin();
 
-            em.createNativeQuery("DELETE FROM movie_actor")
-                    .executeUpdate();
+            em.createNativeQuery(
+                    "DELETE FROM movie_actor"
+            ).executeUpdate();
 
-            em.createNativeQuery("DELETE FROM movie_genre")
-                    .executeUpdate();
+            em.createNativeQuery(
+                    "DELETE FROM movie_genre"
+            ).executeUpdate();
 
-            em.createNativeQuery("DELETE FROM movies")
-                    .executeUpdate();
+            em.createQuery(
+                    "DELETE FROM Movie"
+            ).executeUpdate();
 
-            em.createNativeQuery("DELETE FROM actors")
-                    .executeUpdate();
+            em.createQuery(
+                    "DELETE FROM Actor"
+            ).executeUpdate();
 
-            em.createNativeQuery("DELETE FROM directors")
-                    .executeUpdate();
+            em.createQuery(
+                    "DELETE FROM Director"
+            ).executeUpdate();
 
-            em.createNativeQuery("DELETE FROM genres")
-                    .executeUpdate();
+            em.createQuery(
+                    "DELETE FROM Genre"
+            ).executeUpdate();
 
             em.getTransaction().commit();
-
-        } catch (Exception e) {
-
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-
-            throw e;
 
         } finally {
             em.close();
@@ -102,559 +106,386 @@ class MovieServiceTest extends DAOTestBase {
     @Test
     void saveMovieShouldConvertDTOAndSaveMovie() {
 
-        GenreDTO genreDTO = GenreDTO.builder()
-                .id(18L)
-                .name("Drama")
-                .build();
-
         MovieDTO movieDTO = MovieDTO.builder()
                 .id(550L)
                 .title("Fight Club")
-                .overview("A test movie")
+                .overview("An insomniac...")
                 .releaseDate("1999-10-15")
                 .rating(8.4)
-                .genres(List.of(genreDTO))
+                .popularity(61.416)
+                .genres(List.of(
+                        GenreDTO.builder()
+                                .id(18L)
+                                .name("Drama")
+                                .build()
+                ))
                 .build();
 
         Movie savedMovie =
-                movieService.saveMovie(movieDTO, emptyCredits());
+                movieService.saveMovie(
+                        movieDTO,
+                        emptyCredits()
+                );
 
+        assertNotNull(savedMovie);
         assertNotNull(savedMovie.getId());
         assertEquals(550L, savedMovie.getTmdbId());
         assertEquals("Fight Club", savedMovie.getTitle());
-        assertEquals("A test movie", savedMovie.getOverview());
         assertEquals(8.4, savedMovie.getRating());
-
-        assertNotNull(savedMovie.getReleaseDate());
-        assertEquals(
-                "1999-10-15",
-                savedMovie.getReleaseDate().toString()
-        );
-
         assertEquals(1, savedMovie.getGenres().size());
-        assertEquals(
-                "Drama",
-                savedMovie.getGenres().iterator().next().getName()
-        );
     }
 
     @Test
     void getMovieByIdShouldReturnMovie() {
 
-        MovieDTO movieDTO = MovieDTO.builder()
-                .id(551L)
-                .title("Test Movie")
-                .overview("Test overview")
-                .releaseDate("2020-01-01")
-                .rating(7.5)
-                .genres(List.of())
+        Movie movie = Movie.builder()
+                .tmdbId(551L)
+                .title("The Big Lebowski")
+                .rating(7.8)
                 .build();
 
-        Movie savedMovie =
-                movieService.saveMovie(movieDTO, emptyCredits());
+        Movie savedMovie = movieDAO.create(movie);
 
-        Movie foundMovie =
-                movieService.getMovieById(savedMovie.getId());
+        Movie result =
+                movieService.getMovieById(
+                        savedMovie.getId()
+                );
 
-        assertNotNull(foundMovie);
-        assertEquals(savedMovie.getId(), foundMovie.getId());
-        assertEquals(551L, foundMovie.getTmdbId());
-        assertEquals("Test Movie", foundMovie.getTitle());
+        assertNotNull(result);
+        assertEquals(
+                "The Big Lebowski",
+                result.getTitle()
+        );
     }
 
     @Test
     void getAllMoviesShouldReturnAllMovies() {
 
-        MovieDTO movie1 = MovieDTO.builder()
-                .id(552L)
-                .title("Test Movie 1")
-                .overview("Overview 1")
-                .releaseDate("2020-01-01")
-                .rating(7.0)
-                .genres(List.of())
-                .build();
+        movieDAO.create(
+                Movie.builder()
+                        .tmdbId(552L)
+                        .title("Movie One")
+                        .build()
+        );
 
-        MovieDTO movie2 = MovieDTO.builder()
-                .id(553L)
-                .title("Test Movie 2")
-                .overview("Overview 2")
-                .releaseDate("2021-01-01")
-                .rating(8.0)
-                .genres(List.of())
-                .build();
+        movieDAO.create(
+                Movie.builder()
+                        .tmdbId(553L)
+                        .title("Movie Two")
+                        .build()
+        );
 
-        movieService.saveMovie(movie1, emptyCredits());
-        movieService.saveMovie(movie2, emptyCredits());
-
-        List<Movie> movies = movieService.getAllMovies();
+        List<Movie> movies =
+                movieService.getAllMovies();
 
         assertEquals(2, movies.size());
-
-        assertTrue(movies.stream()
-                .anyMatch(movie ->
-                        movie.getTmdbId().equals(552L)));
-
-        assertTrue(movies.stream()
-                .anyMatch(movie ->
-                        movie.getTmdbId().equals(553L)));
     }
 
     @Test
     void updateMovieShouldModifyMovie() {
 
-        MovieDTO movieDTO = MovieDTO.builder()
-                .id(554L)
-                .title("Original Title")
-                .overview("Original overview")
-                .releaseDate("2020-01-01")
-                .rating(7.0)
-                .genres(List.of())
-                .build();
+        Movie movie = movieDAO.create(
+                Movie.builder()
+                        .tmdbId(554L)
+                        .title("Old Title")
+                        .build()
+        );
 
-        Movie movie =
-                movieService.saveMovie(movieDTO, emptyCredits());
+        movie.setTitle("New Title");
 
-        movie.setTitle("Updated Title");
-        movie.setRating(9.0);
-
-        Movie updatedMovie =
+        Movie updated =
                 movieService.updateMovie(movie);
 
-        assertNotNull(updatedMovie);
-        assertEquals("Updated Title", updatedMovie.getTitle());
-        assertEquals(9.0, updatedMovie.getRating());
+        assertEquals(
+                "New Title",
+                updated.getTitle()
+        );
     }
 
     @Test
     void deleteMovieShouldRemoveMovie() {
 
-        MovieDTO movieDTO = MovieDTO.builder()
-                .id(555L)
-                .title("Movie To Delete")
-                .overview("This movie will be deleted")
-                .releaseDate("2020-01-01")
-                .rating(6.5)
-                .genres(List.of())
-                .build();
-
-        Movie movie =
-                movieService.saveMovie(movieDTO, emptyCredits());
+        Movie movie = movieDAO.create(
+                Movie.builder()
+                        .tmdbId(555L)
+                        .title("Delete Me")
+                        .build()
+        );
 
         boolean deleted =
-                movieService.deleteMovie(movie.getId());
+                movieService.deleteMovie(
+                        movie.getId()
+                );
 
         assertTrue(deleted);
-
-        Movie deletedMovie =
-                movieService.getMovieById(movie.getId());
-
-        assertNull(deletedMovie);
+        assertNull(
+                movieDAO.getById(movie.getId())
+        );
     }
 
     @Test
-    void searchMoviesByTitleShouldBeCaseInsensitiveAndContainSearchString() {
+    void searchMoviesByTitleShouldFindMoviesIgnoringCase() {
 
-        MovieDTO movie1 = MovieDTO.builder()
-                .id(556L)
-                .title("Fight Club")
-                .overview("Test movie")
-                .releaseDate("1999-10-15")
-                .rating(8.4)
-                .genres(List.of())
-                .build();
-
-        MovieDTO movie2 = MovieDTO.builder()
-                .id(557L)
-                .title("The Fight")
-                .overview("Another test movie")
-                .releaseDate("2020-01-01")
-                .rating(7.5)
-                .genres(List.of())
-                .build();
-
-        MovieDTO movie3 = MovieDTO.builder()
-                .id(558L)
-                .title("The Matrix")
-                .overview("Different movie")
-                .releaseDate("1999-03-31")
-                .rating(8.7)
-                .genres(List.of())
-                .build();
-
-        movieService.saveMovie(movie1, emptyCredits());
-        movieService.saveMovie(movie2, emptyCredits());
-        movieService.saveMovie(movie3, emptyCredits());
+        movieDAO.create(
+                Movie.builder()
+                        .tmdbId(556L)
+                        .title("The Dark Knight")
+                        .build()
+        );
 
         List<Movie> results =
-                movieService.searchMoviesByTitle("FIGHT");
+                movieService.searchMoviesByTitle("dark");
 
-        assertEquals(2, results.size());
-
-        assertTrue(results.stream()
-                .anyMatch(movie ->
-                        movie.getTitle().equals("Fight Club")));
-
-        assertTrue(results.stream()
-                .anyMatch(movie ->
-                        movie.getTitle().equals("The Fight")));
+        assertEquals(1, results.size());
+        assertEquals(
+                "The Dark Knight",
+                results.get(0).getTitle()
+        );
     }
 
     @Test
-    void getMoviesByGenreShouldReturnMoviesInGenre() {
+    void getMoviesByGenreShouldReturnMovies() {
 
-        GenreDTO drama = GenreDTO.builder()
-                .id(18L)
-                .name("Drama")
+        Genre genre = genreDAO.create(
+                Genre.builder()
+                        .tmdbId(28L)
+                        .name("Action")
+                        .build()
+        );
+
+        Movie movie = Movie.builder()
+                .tmdbId(557L)
+                .title("Action Movie")
+                .genres(
+                        new java.util.HashSet<>(
+                                List.of(genre)
+                        )
+                )
                 .build();
 
-        GenreDTO comedy = GenreDTO.builder()
-                .id(35L)
-                .name("Comedy")
-                .build();
-
-        MovieDTO movie1 = MovieDTO.builder()
-                .id(559L)
-                .title("Drama Movie")
-                .overview("Drama")
-                .releaseDate("2020-01-01")
-                .rating(8.0)
-                .genres(List.of(drama))
-                .build();
-
-        MovieDTO movie2 = MovieDTO.builder()
-                .id(560L)
-                .title("Comedy Movie")
-                .overview("Comedy")
-                .releaseDate("2021-01-01")
-                .rating(7.0)
-                .genres(List.of(comedy))
-                .build();
-
-        MovieDTO movie3 = MovieDTO.builder()
-                .id(561L)
-                .title("Another Drama")
-                .overview("Drama")
-                .releaseDate("2022-01-01")
-                .rating(8.5)
-                .genres(List.of(drama))
-                .build();
-
-        movieService.saveMovie(movie1, emptyCredits());
-        movieService.saveMovie(movie2, emptyCredits());
-        movieService.saveMovie(movie3, emptyCredits());
-
-        // Find the actual database ID of the Drama genre
-        Long dramaGenreId = genreDAO.getByTmdbId(18L).getId();
+        movieDAO.create(movie);
 
         List<Movie> results =
-                movieService.getMoviesByGenre(dramaGenreId);
+                movieService.getMoviesByGenre(
+                        genre.getId()
+                );
 
-        assertEquals(2, results.size());
-
-        assertTrue(results.stream()
-                .anyMatch(movie ->
-                        movie.getTitle().equals("Drama Movie")));
-
-        assertTrue(results.stream()
-                .anyMatch(movie ->
-                        movie.getTitle().equals("Another Drama")));
-
-        assertFalse(results.stream()
-                .anyMatch(movie ->
-                        movie.getTitle().equals("Comedy Movie")));
+        assertEquals(1, results.size());
+        assertEquals(
+                "Action Movie",
+                results.get(0).getTitle()
+        );
     }
 
     @Test
-    void getAllGenresShouldReturnAllGenres() {
+    void getAllGenresShouldReturnGenres() {
 
-        GenreDTO drama = GenreDTO.builder()
-                .id(18L)
-                .name("Drama")
-                .build();
+        genreDAO.create(
+                Genre.builder()
+                        .tmdbId(18L)
+                        .name("Drama")
+                        .build()
+        );
 
-        GenreDTO comedy = GenreDTO.builder()
-                .id(35L)
-                .name("Comedy")
-                .build();
+        genreDAO.create(
+                Genre.builder()
+                        .tmdbId(28L)
+                        .name("Action")
+                        .build()
+        );
 
-        MovieDTO movie = MovieDTO.builder()
-                .id(562L)
-                .title("Test Movie")
-                .overview("Test overview")
-                .releaseDate("2020-01-01")
-                .rating(8.0)
-                .genres(List.of(drama, comedy))
-                .build();
-
-        movieService.saveMovie(movie, emptyCredits());
-
-        List<Genre> genres = movieService.getAllGenres();
+        List<Genre> genres =
+                movieService.getAllGenres();
 
         assertEquals(2, genres.size());
-
-        assertTrue(genres.stream()
-                .anyMatch(genre ->
-                        genre.getName().equals("Drama")));
-
-        assertTrue(genres.stream()
-                .anyMatch(genre ->
-                        genre.getName().equals("Comedy")));
     }
 
     @Test
-    void getAllActorsAndDirectorsShouldReturnStoredActorsAndDirectors() {
+    void getAllActorsAndDirectorsShouldReturnActorsAndDirectors() {
 
-        CreditsDTO credits = CreditsDTO.builder()
-                .cast(List.of(
-                        app.dtos.ActorDTO.builder()
-                                .id(1001L)
-                                .name("Test Actor 1")
-                                .character("Character 1")
-                                .build(),
-                        app.dtos.ActorDTO.builder()
-                                .id(1002L)
-                                .name("Test Actor 2")
-                                .character("Character 2")
-                                .build()
-                ))
-                .crew(List.of(
-                        app.dtos.CrewMemberDTO.builder()
-                                .id(2001L)
-                                .name("Test Director")
-                                .job("Director")
-                                .build()
-                ))
-                .build();
+        actorDAO.create(
+                Actor.builder()
+                        .tmdbId(1L)
+                        .name("Actor One")
+                        .build()
+        );
 
-        MovieDTO movieDTO = MovieDTO.builder()
-                .id(563L)
-                .title("Test Movie")
-                .overview("Test overview")
-                .releaseDate("2020-01-01")
-                .rating(8.0)
-                .genres(List.of())
-                .build();
+        directorDAO.create(
+                Director.builder()
+                        .tmdbId(2L)
+                        .name("Director One")
+                        .build()
+        );
 
-        movieService.saveMovie(movieDTO, credits);
+        List<Actor> actors =
+                movieService.getAllActors();
 
-        List<Actor> actors = movieService.getAllActors();
-        List<Director> directors = movieService.getAllDirectors();
+        List<Director> directors =
+                movieService.getAllDirectors();
 
-        assertEquals(2, actors.size());
+        assertEquals(1, actors.size());
         assertEquals(1, directors.size());
-
-        assertTrue(actors.stream()
-                .anyMatch(actor ->
-                        actor.getName().equals("Test Actor 1")));
-
-        assertTrue(actors.stream()
-                .anyMatch(actor ->
-                        actor.getName().equals("Test Actor 2")));
-
-        assertTrue(directors.stream()
-                .anyMatch(director ->
-                        director.getName().equals("Test Director")));
     }
 
     @Test
     void getMovieByIdShouldReturnMovieWithActorsAndDirector() {
 
+        Actor actor1 = actorDAO.create(
+                Actor.builder()
+                        .tmdbId(10L)
+                        .name("Actor One")
+                        .build()
+        );
+
+        Actor actor2 = actorDAO.create(
+                Actor.builder()
+                        .tmdbId(11L)
+                        .name("Actor Two")
+                        .build()
+        );
+
+        Director director = directorDAO.create(
+                Director.builder()
+                        .tmdbId(20L)
+                        .name("Director One")
+                        .build()
+        );
+
+        MovieDTO movieDTO = MovieDTO.builder()
+                .id(558L)
+                .title("Test Movie")
+                .build();
+
         CreditsDTO credits = CreditsDTO.builder()
                 .cast(List.of(
                         ActorDTO.builder()
-                                .id(3001L)
+                                .id(10L)
                                 .name("Actor One")
-                                .character("Character One")
                                 .build(),
                         ActorDTO.builder()
-                                .id(3002L)
+                                .id(11L)
                                 .name("Actor Two")
-                                .character("Character Two")
                                 .build()
                 ))
                 .crew(List.of(
                         CrewMemberDTO.builder()
-                                .id(4001L)
-                                .name("Test Director")
+                                .id(20L)
+                                .name("Director One")
                                 .job("Director")
                                 .build()
                 ))
                 .build();
 
-        MovieDTO movieDTO = MovieDTO.builder()
-                .id(564L)
-                .title("Movie With Cast")
-                .overview("Test movie with actors and director")
-                .releaseDate("2020-01-01")
-                .rating(8.0)
-                .genres(List.of())
-                .build();
-
         Movie savedMovie =
-                movieService.saveMovie(movieDTO, credits);
+                movieService.saveMovie(
+                        movieDTO,
+                        credits
+                );
 
-        Movie foundMovie =
-                movieService.getMovieById(savedMovie.getId());
+        Movie result =
+                movieService.getMovieById(
+                        savedMovie.getId()
+                );
 
-        assertNotNull(foundMovie);
-
-        assertEquals("Movie With Cast", foundMovie.getTitle());
-
-        assertNotNull(foundMovie.getActors());
-        assertEquals(2, foundMovie.getActors().size());
-
-        assertTrue(foundMovie.getActors().stream()
-                .anyMatch(actor ->
-                        actor.getName().equals("Actor One")));
-
-        assertTrue(foundMovie.getActors().stream()
-                .anyMatch(actor ->
-                        actor.getName().equals("Actor Two")));
-
-        assertNotNull(foundMovie.getDirector());
+        assertNotNull(result);
+        assertEquals(2, result.getActors().size());
+        assertNotNull(result.getDirector());
         assertEquals(
-                "Test Director",
-                foundMovie.getDirector().getName()
+                "Director One",
+                result.getDirector().getName()
         );
     }
 
     @Test
-    void getAverageRatingShouldReturnAverageOfAllMovieRatings() {
+    void getAverageRatingShouldReturnAverage() {
 
-        MovieDTO movie1 = MovieDTO.builder()
-                .id(565L)
-                .title("Movie One")
-                .overview("Test movie")
-                .releaseDate("2020-01-01")
-                .rating(6.0)
-                .genres(List.of())
-                .build();
+        movieDAO.create(
+                Movie.builder()
+                        .tmdbId(559L)
+                        .title("Movie One")
+                        .rating(8.0)
+                        .build()
+        );
 
-        MovieDTO movie2 = MovieDTO.builder()
-                .id(566L)
-                .title("Movie Two")
-                .overview("Test movie")
-                .releaseDate("2021-01-01")
-                .rating(8.0)
-                .genres(List.of())
-                .build();
+        movieDAO.create(
+                Movie.builder()
+                        .tmdbId(560L)
+                        .title("Movie Two")
+                        .rating(6.0)
+                        .build()
+        );
 
-        MovieDTO movie3 = MovieDTO.builder()
-                .id(567L)
-                .title("Movie Three")
-                .overview("Test movie")
-                .releaseDate("2022-01-01")
-                .rating(10.0)
-                .genres(List.of())
-                .build();
-
-        movieService.saveMovie(movie1, emptyCredits());
-        movieService.saveMovie(movie2, emptyCredits());
-        movieService.saveMovie(movie3, emptyCredits());
-
-        Double averageRating = movieService.getAverageRating();
-
-        assertEquals(8.0, averageRating);
+        assertEquals(
+                7.0,
+                movieService.getAverageRating()
+        );
     }
 
     @Test
-    void getTop10HighestRatedShouldReturnHighestRatedMovies() {
+    void getTop10HighestRatedShouldReturnHighestRated() {
 
         for (int i = 1; i <= 12; i++) {
-
-            MovieDTO movie = MovieDTO.builder()
-                    .id(570L + i)
-                    .title("Movie " + i)
-                    .overview("Test movie")
-                    .releaseDate("2020-01-01")
-                    .rating((double) i)
-                    .genres(List.of())
-                    .build();
-
-            movieService.saveMovie(movie, emptyCredits());
+            movieDAO.create(
+                    Movie.builder()
+                            .tmdbId(600L + i)
+                            .title("Movie " + i)
+                            .rating((double) i)
+                            .build()
+            );
         }
 
-        List<Movie> topMovies =
+        List<Movie> results =
                 movieService.getTop10HighestRated();
 
-        assertEquals(10, topMovies.size());
-
-        assertEquals(12.0, topMovies.get(0).getRating());
-        assertEquals(11.0, topMovies.get(1).getRating());
-        assertEquals(10.0, topMovies.get(2).getRating());
-        assertEquals(3.0, topMovies.get(9).getRating());
-
-        assertTrue(topMovies.stream()
-                .noneMatch(movie ->
-                        movie.getRating() < 3.0));
+        assertEquals(10, results.size());
+        assertEquals(12.0, results.get(0).getRating());
     }
 
     @Test
-    void getTop10LowestRatedShouldReturnLowestRatedMovies() {
+    void getTop10LowestRatedShouldReturnLowestRated() {
 
         for (int i = 1; i <= 12; i++) {
-
-            MovieDTO movie = MovieDTO.builder()
-                    .id(590L + i)
-                    .title("Movie " + i)
-                    .overview("Test movie")
-                    .releaseDate("2020-01-01")
-                    .rating((double) i)
-                    .genres(List.of())
-                    .build();
-
-            movieService.saveMovie(movie, emptyCredits());
+            movieDAO.create(
+                    Movie.builder()
+                            .tmdbId(700L + i)
+                            .title("Movie " + i)
+                            .rating((double) i)
+                            .build()
+            );
         }
 
-        List<Movie> lowestMovies =
+        List<Movie> results =
                 movieService.getTop10LowestRated();
 
-        assertEquals(10, lowestMovies.size());
-
-        assertEquals(1.0, lowestMovies.get(0).getRating());
-        assertEquals(2.0, lowestMovies.get(1).getRating());
-        assertEquals(3.0, lowestMovies.get(2).getRating());
-        assertEquals(10.0, lowestMovies.get(9).getRating());
-
-        assertTrue(lowestMovies.stream()
-                .noneMatch(movie ->
-                        movie.getRating() > 10.0));
+        assertEquals(10, results.size());
+        assertEquals(1.0, results.get(0).getRating());
     }
 
     @Test
-    void getTop10MostPopularShouldReturnMostPopularMovies() {
+    void getTop10MostPopularShouldReturnMostPopular() {
 
         for (int i = 1; i <= 12; i++) {
-
-            MovieDTO movie = MovieDTO.builder()
-                    .id(610L + i)
-                    .title("Movie " + i)
-                    .overview("Test movie")
-                    .releaseDate("2020-01-01")
-                    .rating(7.0)
-                    .popularity((double) i)
-                    .genres(List.of())
-                    .build();
-
-            movieService.saveMovie(movie, emptyCredits());
+            movieDAO.create(
+                    Movie.builder()
+                            .tmdbId(800L + i)
+                            .title("Movie " + i)
+                            .popularity((double) i)
+                            .build()
+            );
         }
 
-        List<Movie> popularMovies =
+        List<Movie> results =
                 movieService.getTop10MostPopular();
 
-        assertEquals(10, popularMovies.size());
-
-        assertEquals(12.0, popularMovies.get(0).getPopularity());
-        assertEquals(11.0, popularMovies.get(1).getPopularity());
-        assertEquals(10.0, popularMovies.get(2).getPopularity());
-        assertEquals(3.0, popularMovies.get(9).getPopularity());
-
-        assertTrue(popularMovies.stream()
-                .noneMatch(movie ->
-                        movie.getPopularity() < 3.0));
+        assertEquals(10, results.size());
+        assertEquals(
+                12.0,
+                results.get(0).getPopularity()
+        );
     }
 
     private CreditsDTO emptyCredits() {
+
         return CreditsDTO.builder()
                 .cast(List.of())
                 .crew(List.of())

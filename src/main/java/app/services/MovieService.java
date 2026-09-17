@@ -41,7 +41,8 @@ public class MovieService {
 
     public Movie saveMovie(MovieDTO movieDTO, CreditsDTO creditsDTO) {
 
-        Movie existingMovie = movieDAO.getByTmdbId(movieDTO.getId());
+        Movie existingMovie =
+                movieDAO.getByTmdbId(movieDTO.getId());
 
         if (existingMovie != null) {
             System.out.println("Movie already exists - skipping save");
@@ -79,106 +80,6 @@ public class MovieService {
         return movieDAO.delete(id);
     }
 
-    private Set<Genre> convertGenres(List<GenreDTO> genreDTOs) {
-
-        if (genreDTOs == null) {
-            return Collections.emptySet();
-        }
-
-        return genreDTOs.stream()
-                .map(this::findOrCreateGenre)
-                .collect(Collectors.toSet());
-    }
-
-    private Genre findOrCreateGenre(GenreDTO dto) {
-
-        Genre existingGenre = genreDAO.getByTmdbId(dto.getId());
-
-        if (existingGenre != null) {
-            return existingGenre;
-        }
-
-        Genre newGenre = Genre.builder()
-                .tmdbId(dto.getId())
-                .name(dto.getName())
-                .build();
-
-        return genreDAO.create(newGenre);
-    }
-
-    private Set<Actor> convertActors(CreditsDTO creditsDTO) {
-        if (creditsDTO == null || creditsDTO.getCast() == null) {
-            return Collections.emptySet();
-        }
-
-        return creditsDTO.getCast().stream()
-                .collect(Collectors.toMap(
-                        ActorDTO::getId,
-                        this::findOrCreateActor,
-                        (first, second) -> first
-                ))
-                .values()
-                .stream()
-                .collect(Collectors.toSet());
-    }
-
-    private Actor findOrCreateActor(ActorDTO dto) {
-
-        Actor existingActor = actorDAO.getByTmdbId(dto.getId());
-
-        if (existingActor != null) {
-            return existingActor;
-        }
-
-        Actor newActor = Actor.builder()
-                .tmdbId(dto.getId())
-                .name(dto.getName())
-                .build();
-
-        return actorDAO.create(newActor);
-    }
-
-    private Director convertDirector(CreditsDTO creditsDTO) {
-
-        if (creditsDTO == null || creditsDTO.getCrew() == null) {
-            return null;
-        }
-
-        return creditsDTO.getCrew().stream()
-                .filter(crewMember ->
-                        "Director".equalsIgnoreCase(crewMember.getJob())
-                )
-                .map(this::findOrCreateDirector)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private Director findOrCreateDirector(CrewMemberDTO dto) {
-
-        Director existingDirector =
-                directorDAO.getByTmdbId(dto.getId());
-
-        if (existingDirector != null) {
-            return existingDirector;
-        }
-
-        Director newDirector = Director.builder()
-                .tmdbId(dto.getId())
-                .name(dto.getName())
-                .build();
-
-        return directorDAO.create(newDirector);
-    }
-
-    private LocalDate parseReleaseDate(String releaseDate) {
-
-        if (releaseDate == null || releaseDate.isBlank()) {
-            return null;
-        }
-
-        return LocalDate.parse(releaseDate);
-    }
-
     public List<Movie> searchMoviesByTitle(String searchString) {
         return movieDAO.searchByTitle(searchString);
     }
@@ -213,5 +114,112 @@ public class MovieService {
 
     public List<Movie> getTop10MostPopular() {
         return movieDAO.getTop10MostPopular();
+    }
+
+    private Set<Genre> convertGenres(List<GenreDTO> genreDTOs) {
+
+        if (genreDTOs == null) {
+            return Collections.emptySet();
+        }
+
+        return genreDTOs.stream()
+                .map(this::findOrCreateGenre)
+                .collect(Collectors.toSet());
+    }
+
+    private Genre findOrCreateGenre(GenreDTO dto) {
+
+        Genre existingGenre =
+                genreDAO.getByTmdbId(dto.getId());
+
+        if (existingGenre != null) {
+            return existingGenre;
+        }
+
+        Genre newGenre = Genre.builder()
+                .tmdbId(dto.getId())
+                .name(dto.getName())
+                .build();
+
+        return genreDAO.create(newGenre);
+    }
+
+    private Set<Actor> convertActors(CreditsDTO creditsDTO) {
+
+        if (creditsDTO == null || creditsDTO.getCast() == null) {
+            return Collections.emptySet();
+        }
+
+        return creditsDTO.getCast()
+                .stream()
+                .collect(Collectors.toMap(
+                        ActorDTO::getId,
+                        this::findOrCreateActor,
+                        (first, second) -> first
+                ))
+                .values()
+                .stream()
+                .collect(Collectors.toSet());
+    }
+
+    private Actor findOrCreateActor(ActorDTO dto) {
+
+        Actor existingActor =
+                actorDAO.getByTmdbId(dto.getId());
+
+        if (existingActor != null) {
+            return existingActor;
+        }
+
+        Actor newActor = Actor.builder()
+                .tmdbId(dto.getId())
+                .name(dto.getName())
+                .build();
+
+        return actorDAO.create(newActor);
+    }
+
+    private Director convertDirector(CreditsDTO creditsDTO) {
+
+        if (creditsDTO == null || creditsDTO.getCrew() == null) {
+            return null;
+        }
+
+        return creditsDTO.getCrew()
+                .stream()
+                .filter(crewMember ->
+                        "Director".equalsIgnoreCase(
+                                crewMember.getJob()
+                        )
+                )
+                .map(this::findOrCreateDirector)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Director findOrCreateDirector(CrewMemberDTO dto) {
+
+        Director existingDirector =
+                directorDAO.getByTmdbId(dto.getId());
+
+        if (existingDirector != null) {
+            return existingDirector;
+        }
+
+        Director newDirector = Director.builder()
+                .tmdbId(dto.getId())
+                .name(dto.getName())
+                .build();
+
+        return directorDAO.create(newDirector);
+    }
+
+    private LocalDate parseReleaseDate(String releaseDate) {
+
+        if (releaseDate == null || releaseDate.isBlank()) {
+            return null;
+        }
+
+        return LocalDate.parse(releaseDate);
     }
 }

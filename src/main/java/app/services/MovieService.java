@@ -54,6 +54,7 @@ public class MovieService {
                 .overview(movieDTO.getOverview())
                 .releaseDate(parseReleaseDate(movieDTO.getReleaseDate()))
                 .rating(movieDTO.getRating())
+                .popularity(movieDTO.getPopularity())
                 .genres(convertGenres(movieDTO.getGenres()))
                 .actors(convertActors(creditsDTO))
                 .director(convertDirector(creditsDTO))

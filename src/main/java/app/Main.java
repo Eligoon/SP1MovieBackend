@@ -146,5 +146,12 @@ public class Main {
                                 movie.getTitle()
                 )
         );
+
+        System.out.println();
+        System.out.println("Database counts:");
+        System.out.println("Movies: " + movieService.getAllMovies().size());
+        System.out.println("Actors: " + movieService.getAllActors().size());
+        System.out.println("Directors: " + movieService.getAllDirectors().size());
+        System.out.println("Genres: " + movieService.getAllGenres().size());
     }
 }

@@ -55,6 +55,24 @@ public class GenreDAO implements IDAO<Genre, Long> {
         }
     }
 
+    public Genre getByTmdbId(Long tmdbId) {
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT g FROM Genre g WHERE g.tmdbId = :tmdbId",
+                            Genre.class
+                    )
+                    .setParameter("tmdbId", tmdbId)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+        } finally {
+            em.close();
+        }
+    }
+
     @Override
     public List<Genre> getAll() {
         EntityManager em = emf.createEntityManager();

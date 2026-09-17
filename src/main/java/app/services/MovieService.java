@@ -1,5 +1,6 @@
 package app.services;
 
+import app.daos.GenreDAO;
 import app.daos.MovieDAO;
 import app.dtos.GenreDTO;
 import app.dtos.MovieDTO;
@@ -7,6 +8,7 @@ import app.entities.Genre;
 import app.entities.Movie;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,9 +16,11 @@ import java.util.stream.Collectors;
 public class MovieService {
 
     private final MovieDAO movieDAO;
+    private final GenreDAO genreDAO;
 
-    public MovieService(MovieDAO movieDAO) {
+    public MovieService(MovieDAO movieDAO, GenreDAO genreDAO) {
         this.movieDAO = movieDAO;
+        this.genreDAO = genreDAO;
     }
 
     public Movie saveMovie(MovieDTO dto) {
@@ -33,19 +37,47 @@ public class MovieService {
         return movieDAO.create(movie);
     }
 
-    private Set<Genre> convertGenres(List<GenreDTO> genres) {
+    public Movie getMovieById(Long id) {
+        return movieDAO.getById(id);
+    }
 
-        return genres.stream()
-                .map(this::convertGenre)
+    public List<Movie> getAllMovies() {
+        return movieDAO.getAll();
+    }
+
+    public Movie updateMovie(Movie movie) {
+        return movieDAO.update(movie);
+    }
+
+    public boolean deleteMovie(Long id) {
+        return movieDAO.delete(id);
+    }
+
+    private Set<Genre> convertGenres(List<GenreDTO> genreDTOs) {
+
+        if (genreDTOs == null) {
+            return Collections.emptySet();
+        }
+
+        return genreDTOs.stream()
+                .map(this::findOrCreateGenre)
                 .collect(Collectors.toSet());
     }
 
-    private Genre convertGenre(GenreDTO dto) {
+    private Genre findOrCreateGenre(GenreDTO dto) {
 
-        return Genre.builder()
+        Genre existingGenre = genreDAO.getByTmdbId(dto.getId());
+
+        if (existingGenre != null) {
+            return existingGenre;
+        }
+
+        Genre newGenre = Genre.builder()
                 .tmdbId(dto.getId())
                 .name(dto.getName())
                 .build();
+
+        return genreDAO.create(newGenre);
     }
 
     private LocalDate parseReleaseDate(String releaseDate) {

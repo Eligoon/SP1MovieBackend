@@ -2,9 +2,11 @@ package app.daos;
 
 import app.config.TestHibernateConfig;
 import app.entities.Movie;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,10 +28,41 @@ class MovieDAOTest extends DAOTestBase {
         movieDAO = new MovieDAO(emf);
     }
 
+    @BeforeEach
+    void cleanDatabase() {
+
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            em.createNativeQuery("DELETE FROM movie_actor")
+                    .executeUpdate();
+
+            em.createNativeQuery("DELETE FROM movie_genre")
+                    .executeUpdate();
+
+            em.createNativeQuery("DELETE FROM movies")
+                    .executeUpdate();
+
+            em.getTransaction().commit();
+
+        } catch (Exception e) {
+
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+
+            throw e;
+
+        } finally {
+            em.close();
+        }
+    }
+
     @AfterAll
     static void tearDown() {
-
-        TestHibernateConfig.close();
+        emf.close();
     }
 
     @Test
@@ -61,12 +94,22 @@ class MovieDAOTest extends DAOTestBase {
 
         Movie createdMovie = movieDAO.create(movie);
 
-        Movie foundMovie = movieDAO.getById(createdMovie.getId());
+        Movie foundMovie =
+                movieDAO.getById(createdMovie.getId());
 
         assertNotNull(foundMovie);
-        assertEquals(createdMovie.getId(), foundMovie.getId());
-        assertEquals(551L, foundMovie.getTmdbId());
-        assertEquals("Test Movie", foundMovie.getTitle());
+        assertEquals(
+                createdMovie.getId(),
+                foundMovie.getId()
+        );
+        assertEquals(
+                551L,
+                foundMovie.getTmdbId()
+        );
+        assertEquals(
+                "Test Movie",
+                foundMovie.getTitle()
+        );
     }
 
     @Test
@@ -95,12 +138,18 @@ class MovieDAOTest extends DAOTestBase {
 
         assertTrue(
                 movies.stream()
-                        .anyMatch(movie -> movie.getTmdbId().equals(552L))
+                        .anyMatch(
+                                movie ->
+                                        movie.getTmdbId().equals(552L)
+                        )
         );
 
         assertTrue(
                 movies.stream()
-                        .anyMatch(movie -> movie.getTmdbId().equals(553L))
+                        .anyMatch(
+                                movie ->
+                                        movie.getTmdbId().equals(553L)
+                        )
         );
     }
 
@@ -119,12 +168,25 @@ class MovieDAOTest extends DAOTestBase {
         createdMovie.setTitle("Updated Title");
         createdMovie.setRating(9.0);
 
-        Movie updatedMovie = movieDAO.update(createdMovie);
+        Movie updatedMovie =
+                movieDAO.update(createdMovie);
 
         assertNotNull(updatedMovie);
-        assertEquals(createdMovie.getId(), updatedMovie.getId());
-        assertEquals("Updated Title", updatedMovie.getTitle());
-        assertEquals(9.0, updatedMovie.getRating());
+
+        assertEquals(
+                createdMovie.getId(),
+                updatedMovie.getId()
+        );
+
+        assertEquals(
+                "Updated Title",
+                updatedMovie.getTitle()
+        );
+
+        assertEquals(
+                9.0,
+                updatedMovie.getRating()
+        );
     }
 
     @Test
@@ -139,7 +201,8 @@ class MovieDAOTest extends DAOTestBase {
 
         Movie createdMovie = movieDAO.create(movie);
 
-        boolean deleted = movieDAO.delete(createdMovie.getId());
+        boolean deleted =
+                movieDAO.delete(createdMovie.getId());
 
         assertTrue(deleted);
 

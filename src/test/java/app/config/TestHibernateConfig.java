@@ -14,8 +14,6 @@ import java.util.Properties;
 
 public final class TestHibernateConfig {
 
-    private static EntityManagerFactory emf;
-
     private TestHibernateConfig() {
     }
 
@@ -25,78 +23,34 @@ public final class TestHibernateConfig {
             String password
     ) {
 
-        if (emf == null) {
+        Properties props = new Properties();
 
-            Properties props = new Properties();
+        props.put("hibernate.connection.driver_class", "org.postgresql.Driver");
+        props.put("hibernate.connection.url", jdbcUrl);
+        props.put("hibernate.connection.username", username);
+        props.put("hibernate.connection.password", password);
 
-            props.put(
-                    "hibernate.connection.driver_class",
-                    "org.postgresql.Driver"
-            );
+        props.put("hibernate.hbm2ddl.auto", "create-drop");
+        props.put("hibernate.show_sql", "true");
+        props.put("hibernate.format_sql", "true");
 
-            props.put(
-                    "hibernate.connection.url",
-                    jdbcUrl
-            );
+        Configuration configuration = new Configuration();
+        configuration.setProperties(props);
 
-            props.put(
-                    "hibernate.connection.username",
-                    username
-            );
+        configuration
+                .addAnnotatedClass(Movie.class)
+                .addAnnotatedClass(Actor.class)
+                .addAnnotatedClass(Genre.class)
+                .addAnnotatedClass(Director.class);
 
-            props.put(
-                    "hibernate.connection.password",
-                    password
-            );
+        ServiceRegistry serviceRegistry =
+                new StandardServiceRegistryBuilder()
+                        .applySettings(configuration.getProperties())
+                        .build();
 
-            props.put(
-                    "hibernate.hbm2ddl.auto",
-                    "create-drop"
-            );
+        SessionFactory sessionFactory =
+                configuration.buildSessionFactory(serviceRegistry);
 
-            props.put(
-                    "hibernate.show_sql",
-                    "true"
-            );
-
-            props.put(
-                    "hibernate.format_sql",
-                    "true"
-            );
-
-            Configuration configuration = new Configuration();
-
-            configuration.setProperties(props);
-
-            configuration
-                    .addAnnotatedClass(Movie.class)
-                    .addAnnotatedClass(Actor.class)
-                    .addAnnotatedClass(Genre.class)
-                    .addAnnotatedClass(Director.class);
-
-            ServiceRegistry serviceRegistry =
-                    new StandardServiceRegistryBuilder()
-                            .applySettings(configuration.getProperties())
-                            .build();
-
-            SessionFactory sessionFactory =
-                    configuration.buildSessionFactory(
-                            serviceRegistry
-                    );
-
-            emf = sessionFactory.unwrap(
-                    EntityManagerFactory.class
-            );
-        }
-
-        return emf;
-    }
-
-    public static void close() {
-
-        if (emf != null) {
-            emf.close();
-            emf = null;
-        }
+        return sessionFactory.unwrap(EntityManagerFactory.class);
     }
 }

@@ -15,6 +15,10 @@ public class GenreDAO implements IDAO<Genre, Long> {
         this.emf = HibernateConfig.getEntityManagerFactory();
     }
 
+    public GenreDAO(EntityManagerFactory emf) {
+        this.emf = emf;
+    }
+
     @Override
     public Genre create(Genre genre) {
         EntityManager em = emf.createEntityManager();

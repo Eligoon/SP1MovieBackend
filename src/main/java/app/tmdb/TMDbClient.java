@@ -3,6 +3,7 @@ package app.tmdb;
 
 import app.dtos.CreditsDTO;
 import app.dtos.MovieDTO;
+import app.dtos.MovieResultsDTO;
 import app.exceptions.ApiException;
 import app.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -120,6 +121,57 @@ public class TMDbClient {
             throw new ApiException(
                     500,
                     "Could not fetch credits from TMDb: "
+                            + e.getMessage()
+            );
+        }
+    }
+
+    public MovieResultsDTO discoverDanishMovies(
+            String fromDate,
+            String toDate,
+            int page
+    ) {
+        String url = baseUrl + "/discover/movie"
+                + "?api_key=" + apiKey
+                + "&with_origin_country=DK"
+                + "&primary_release_date.gte=" + fromDate
+                + "&primary_release_date.lte=" + toDate
+                + "&page=" + page;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (response.statusCode() != 200) {
+                throw new ApiException(
+                        response.statusCode(),
+                        "TMDb discover request failed: " + response.body()
+                );
+            }
+
+            return objectMapper.readValue(
+                    response.body(),
+                    MovieResultsDTO.class
+            );
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ApiException(
+                    500,
+                    "TMDb discover request was interrupted."
+            );
+
+        } catch (IOException e) {
+            throw new ApiException(
+                    500,
+                    "Could not fetch Danish movies from TMDb: "
                             + e.getMessage()
             );
         }

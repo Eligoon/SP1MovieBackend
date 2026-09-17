@@ -205,4 +205,8 @@ public class MovieService {
     public List<Movie> getTop10LowestRated() {
         return movieDAO.getTop10LowestRated();
     }
+
+    public List<Movie> getTop10MostPopular() {
+        return movieDAO.getTop10MostPopular();
+    }
 }

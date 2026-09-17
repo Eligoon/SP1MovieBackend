@@ -621,6 +621,39 @@ class MovieServiceTest extends DAOTestBase {
                         movie.getRating() > 10.0));
     }
 
+    @Test
+    void getTop10MostPopularShouldReturnMostPopularMovies() {
+
+        for (int i = 1; i <= 12; i++) {
+
+            MovieDTO movie = MovieDTO.builder()
+                    .id(610L + i)
+                    .title("Movie " + i)
+                    .overview("Test movie")
+                    .releaseDate("2020-01-01")
+                    .rating(7.0)
+                    .popularity((double) i)
+                    .genres(List.of())
+                    .build();
+
+            movieService.saveMovie(movie, emptyCredits());
+        }
+
+        List<Movie> popularMovies =
+                movieService.getTop10MostPopular();
+
+        assertEquals(10, popularMovies.size());
+
+        assertEquals(12.0, popularMovies.get(0).getPopularity());
+        assertEquals(11.0, popularMovies.get(1).getPopularity());
+        assertEquals(10.0, popularMovies.get(2).getPopularity());
+        assertEquals(3.0, popularMovies.get(9).getPopularity());
+
+        assertTrue(popularMovies.stream()
+                .noneMatch(movie ->
+                        movie.getPopularity() < 3.0));
+    }
+
     private CreditsDTO emptyCredits() {
         return CreditsDTO.builder()
                 .cast(List.of())

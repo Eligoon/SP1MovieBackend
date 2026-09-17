@@ -31,10 +31,7 @@ public class Main {
                 directorDAO
         );
 
-
         // Fetch first page to determine total number of pages
-
-
         MovieResultsDTO firstPage = tmdbClient.discoverDanishMovies(
                 "2021-09-17",
                 "2026-09-17",
@@ -48,10 +45,7 @@ public class Main {
         System.out.println("Total results: " + firstPage.getTotalResults());
         System.out.println("Total pages: " + totalPages);
 
-
         // Import all Danish movies
-
-
         System.out.println();
         System.out.println("Starting import...");
 
@@ -67,7 +61,7 @@ public class Main {
 
             MovieResultsDTO results;
 
-            // already fetched page 1
+            // Already fetched page 1
             if (page == 1) {
                 results = firstPage;
             } else {
@@ -78,10 +72,7 @@ public class Main {
                 );
             }
 
-
             // Process each movie on the current page
-
-
             results.getResults().forEach(movie -> {
 
                 try {
@@ -125,17 +116,11 @@ public class Main {
             });
         }
 
-
         // Import finished
-
-
         System.out.println();
         System.out.println("Import finished.");
 
-
         // Show movies currently stored in database
-
-
         System.out.println();
         System.out.println("Movies currently in database:");
 
@@ -147,11 +132,29 @@ public class Main {
                 )
         );
 
+        // Check count of movies etc.
         System.out.println();
         System.out.println("Database counts:");
-        System.out.println("Movies: " + movieService.getAllMovies().size());
-        System.out.println("Actors: " + movieService.getAllActors().size());
-        System.out.println("Directors: " + movieService.getAllDirectors().size());
-        System.out.println("Genres: " + movieService.getAllGenres().size());
+
+        System.out.println(
+                "Movies: " +
+                        movieService.getAllMovies().size()
+        );
+
+        System.out.println(
+                "Actors: " +
+                        movieService.getAllActors().size()
+        );
+
+        System.out.println(
+                "Directors: " +
+                        movieService.getAllDirectors().size()
+        );
+
+        System.out.println(
+                "Genres: " +
+                        movieService.getAllGenres().size()
+        );
+
     }
 }

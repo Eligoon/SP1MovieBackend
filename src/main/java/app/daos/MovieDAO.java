@@ -170,4 +170,21 @@ public class MovieDAO implements IDAO<Movie, Long> {
             em.close();
         }
     }
+
+    public List<Movie> getMoviesByGenre(Long genreId) {
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT m FROM Movie m " +
+                                    "JOIN m.genres g " +
+                                    "WHERE g.id = :genreId",
+                            Movie.class)
+                    .setParameter("genreId", genreId)
+                    .getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
 }

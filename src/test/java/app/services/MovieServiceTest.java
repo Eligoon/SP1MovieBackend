@@ -298,6 +298,71 @@ class MovieServiceTest extends DAOTestBase {
                         movie.getTitle().equals("The Fight")));
     }
 
+    @Test
+    void getMoviesByGenreShouldReturnMoviesInGenre() {
+
+        GenreDTO drama = GenreDTO.builder()
+                .id(18L)
+                .name("Drama")
+                .build();
+
+        GenreDTO comedy = GenreDTO.builder()
+                .id(35L)
+                .name("Comedy")
+                .build();
+
+        MovieDTO movie1 = MovieDTO.builder()
+                .id(559L)
+                .title("Drama Movie")
+                .overview("Drama")
+                .releaseDate("2020-01-01")
+                .rating(8.0)
+                .genres(List.of(drama))
+                .build();
+
+        MovieDTO movie2 = MovieDTO.builder()
+                .id(560L)
+                .title("Comedy Movie")
+                .overview("Comedy")
+                .releaseDate("2021-01-01")
+                .rating(7.0)
+                .genres(List.of(comedy))
+                .build();
+
+        MovieDTO movie3 = MovieDTO.builder()
+                .id(561L)
+                .title("Another Drama")
+                .overview("Drama")
+                .releaseDate("2022-01-01")
+                .rating(8.5)
+                .genres(List.of(drama))
+                .build();
+
+        movieService.saveMovie(movie1, emptyCredits());
+        movieService.saveMovie(movie2, emptyCredits());
+        movieService.saveMovie(movie3, emptyCredits());
+
+        // Find the actual database ID of the Drama genre
+        Long dramaGenreId = genreDAO.getByTmdbId(18L).getId();
+
+        List<Movie> results =
+                movieService.getMoviesByGenre(dramaGenreId);
+
+        assertEquals(2, results.size());
+
+        assertTrue(results.stream()
+                .anyMatch(movie ->
+                        movie.getTitle().equals("Drama Movie")));
+
+        assertTrue(results.stream()
+                .anyMatch(movie ->
+                        movie.getTitle().equals("Another Drama")));
+
+        assertFalse(results.stream()
+                .anyMatch(movie ->
+                        movie.getTitle().equals("Comedy Movie")));
+    }
+
     private CreditsDTO emptyCredits() {
         return CreditsDTO.builder()
                 .cast(List.of())

@@ -176,4 +176,8 @@ public class MovieService {
     public List<Movie> searchMoviesByTitle(String searchString) {
         return movieDAO.searchByTitle(searchString);
     }
+
+    public List<Movie> getMoviesByGenre(Long genreId) {
+        return movieDAO.getMoviesByGenre(genreId);
+    }
 }

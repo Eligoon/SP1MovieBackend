@@ -48,11 +48,20 @@ public class MovieDAO implements IDAO<Movie, Long> {
 
     @Override
     public Movie getById(Long id) {
-
         EntityManager em = emf.createEntityManager();
 
         try {
-            return em.find(Movie.class, id);
+            return em.createQuery(
+                            "SELECT DISTINCT m FROM Movie m " +
+                                    "LEFT JOIN FETCH m.actors " +
+                                    "LEFT JOIN FETCH m.genres " +
+                                    "LEFT JOIN FETCH m.director " +
+                                    "WHERE m.id = :id",
+                            Movie.class)
+                    .setParameter("id", id)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
 
         } finally {
             em.close();

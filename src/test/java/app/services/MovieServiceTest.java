@@ -6,9 +6,7 @@ import app.daos.DAOTestBase;
 import app.daos.DirectorDAO;
 import app.daos.GenreDAO;
 import app.daos.MovieDAO;
-import app.dtos.CreditsDTO;
-import app.dtos.GenreDTO;
-import app.dtos.MovieDTO;
+import app.dtos.*;
 import app.entities.Actor;
 import app.entities.Director;
 import app.entities.Genre;
@@ -456,6 +454,68 @@ class MovieServiceTest extends DAOTestBase {
         assertTrue(directors.stream()
                 .anyMatch(director ->
                         director.getName().equals("Test Director")));
+    }
+
+    @Test
+    void getMovieByIdShouldReturnMovieWithActorsAndDirector() {
+
+        CreditsDTO credits = CreditsDTO.builder()
+                .cast(List.of(
+                        ActorDTO.builder()
+                                .id(3001L)
+                                .name("Actor One")
+                                .character("Character One")
+                                .build(),
+                        ActorDTO.builder()
+                                .id(3002L)
+                                .name("Actor Two")
+                                .character("Character Two")
+                                .build()
+                ))
+                .crew(List.of(
+                        CrewMemberDTO.builder()
+                                .id(4001L)
+                                .name("Test Director")
+                                .job("Director")
+                                .build()
+                ))
+                .build();
+
+        MovieDTO movieDTO = MovieDTO.builder()
+                .id(564L)
+                .title("Movie With Cast")
+                .overview("Test movie with actors and director")
+                .releaseDate("2020-01-01")
+                .rating(8.0)
+                .genres(List.of())
+                .build();
+
+        Movie savedMovie =
+                movieService.saveMovie(movieDTO, credits);
+
+        Movie foundMovie =
+                movieService.getMovieById(savedMovie.getId());
+
+        assertNotNull(foundMovie);
+
+        assertEquals("Movie With Cast", foundMovie.getTitle());
+
+        assertNotNull(foundMovie.getActors());
+        assertEquals(2, foundMovie.getActors().size());
+
+        assertTrue(foundMovie.getActors().stream()
+                .anyMatch(actor ->
+                        actor.getName().equals("Actor One")));
+
+        assertTrue(foundMovie.getActors().stream()
+                .anyMatch(actor ->
+                        actor.getName().equals("Actor Two")));
+
+        assertNotNull(foundMovie.getDirector());
+        assertEquals(
+                "Test Director",
+                foundMovie.getDirector().getName()
+        );
     }
 
     private CreditsDTO emptyCredits() {

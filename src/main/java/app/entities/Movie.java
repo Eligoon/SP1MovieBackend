@@ -33,6 +33,8 @@ public class Movie {
 
     private Double rating;
 
+    private Double popularity;
+
     @ManyToMany
     @JoinTable(
             name = "movie_actor",

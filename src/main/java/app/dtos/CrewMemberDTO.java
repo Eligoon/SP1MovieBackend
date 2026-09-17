@@ -9,9 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ActorDTO {
+public class CrewMemberDTO {
 
     private Long id;
     private String name;
-    private String character;
+    private String job;
 }

@@ -7,6 +7,7 @@ import app.daos.MovieDAO;
 import app.dtos.ActorDTO;
 import app.dtos.CreditsDTO;
 import app.dtos.CrewMemberDTO;
+import app.dtos.DirectorDTO;
 import app.dtos.GenreDTO;
 import app.dtos.MovieDTO;
 import app.entities.Actor;
@@ -53,12 +54,24 @@ public class MovieService {
                 .tmdbId(movieDTO.getId())
                 .title(movieDTO.getTitle())
                 .overview(movieDTO.getOverview())
-                .releaseDate(parseReleaseDate(movieDTO.getReleaseDate()))
+                .releaseDate(
+                        parseReleaseDate(
+                                movieDTO.getReleaseDate()
+                        )
+                )
                 .rating(movieDTO.getRating())
                 .popularity(movieDTO.getPopularity())
-                .genres(convertGenres(movieDTO.getGenres()))
-                .actors(convertActors(creditsDTO))
-                .director(convertDirector(creditsDTO))
+                .genres(
+                        convertGenres(
+                                movieDTO.getGenres()
+                        )
+                )
+                .actors(
+                        convertActors(creditsDTO)
+                )
+                .director(
+                        convertDirector(creditsDTO)
+                )
                 .build();
 
         return movieDAO.create(movie);
@@ -66,6 +79,17 @@ public class MovieService {
 
     public Movie getMovieById(Long id) {
         return movieDAO.getById(id);
+    }
+
+    public MovieDTO getMovieDTOById(Long id) {
+
+        Movie movie = movieDAO.getById(id);
+
+        if (movie == null) {
+            return null;
+        }
+
+        return convertToDTO(movie);
     }
 
     public List<Movie> getAllMovies() {
@@ -116,7 +140,59 @@ public class MovieService {
         return movieDAO.getTop10MostPopular();
     }
 
-    private Set<Genre> convertGenres(List<GenreDTO> genreDTOs) {
+    private MovieDTO convertToDTO(Movie movie) {
+
+        return MovieDTO.builder()
+                .id(movie.getTmdbId())
+                .title(movie.getTitle())
+                .overview(movie.getOverview())
+                .releaseDate(
+                        movie.getReleaseDate() != null
+                                ? movie.getReleaseDate().toString()
+                                : null
+                )
+                .rating(movie.getRating())
+                .popularity(movie.getPopularity())
+                .genres(
+                        movie.getGenres()
+                                .stream()
+                                .map(this::convertToDTO)
+                                .toList()
+                )
+                .build();
+    }
+
+    private GenreDTO convertToDTO(Genre genre) {
+
+        return GenreDTO.builder()
+                .id(genre.getTmdbId())
+                .name(genre.getName())
+                .build();
+    }
+
+    private ActorDTO convertToDTO(Actor actor) {
+
+        return ActorDTO.builder()
+                .id(actor.getTmdbId())
+                .name(actor.getName())
+                .build();
+    }
+
+    private DirectorDTO convertToDTO(Director director) {
+
+        if (director == null) {
+            return null;
+        }
+
+        return DirectorDTO.builder()
+                .id(director.getTmdbId())
+                .name(director.getName())
+                .build();
+    }
+
+    private Set<Genre> convertGenres(
+            List<GenreDTO> genreDTOs
+    ) {
 
         if (genreDTOs == null) {
             return Collections.emptySet();
@@ -144,9 +220,12 @@ public class MovieService {
         return genreDAO.create(newGenre);
     }
 
-    private Set<Actor> convertActors(CreditsDTO creditsDTO) {
+    private Set<Actor> convertActors(
+            CreditsDTO creditsDTO
+    ) {
 
-        if (creditsDTO == null || creditsDTO.getCast() == null) {
+        if (creditsDTO == null
+                || creditsDTO.getCast() == null) {
             return Collections.emptySet();
         }
 
@@ -179,9 +258,12 @@ public class MovieService {
         return actorDAO.create(newActor);
     }
 
-    private Director convertDirector(CreditsDTO creditsDTO) {
+    private Director convertDirector(
+            CreditsDTO creditsDTO
+    ) {
 
-        if (creditsDTO == null || creditsDTO.getCrew() == null) {
+        if (creditsDTO == null
+                || creditsDTO.getCrew() == null) {
             return null;
         }
 
@@ -197,7 +279,9 @@ public class MovieService {
                 .orElse(null);
     }
 
-    private Director findOrCreateDirector(CrewMemberDTO dto) {
+    private Director findOrCreateDirector(
+            CrewMemberDTO dto
+    ) {
 
         Director existingDirector =
                 directorDAO.getByTmdbId(dto.getId());
@@ -214,9 +298,12 @@ public class MovieService {
         return directorDAO.create(newDirector);
     }
 
-    private LocalDate parseReleaseDate(String releaseDate) {
+    private LocalDate parseReleaseDate(
+            String releaseDate
+    ) {
 
-        if (releaseDate == null || releaseDate.isBlank()) {
+        if (releaseDate == null
+                || releaseDate.isBlank()) {
             return null;
         }
 
